@@ -5,14 +5,22 @@
   "type": "module",
   "scripts": {
     "build": "remix vite:build",
-    "dev": "remix vite:dev",
+    "dev": "NODE_OPTIONS=\"--import tsx/esm\" remix vite:dev",
     "lint": "eslint . --fix",
     "lint:check": "eslint .",
+    "test": "NODE_OPTIONS=\"--import tsx/esm\" vitest",
     "preview": "pnpm run build && wrangler pages dev",
     "start": "wrangler pages dev ./build/client",
-    "typegen": "wrangler types"
+    "typegen": "wrangler types",
+    "db:reset": "pnpm db:apply:migration && pnpm db:seed",
+    "db:create:migration": "pnpm wrangler d1 migrations create meibo-system-v3-db",
+    "db:apply:migration": "pnpm wrangler d1 migrations apply meibo-system-v3-db --local",
+    "db:gen:migration": "pnpm prisma migrate diff --from-empty --to-schema-datamodel ./prisma/schema.prisma --script --output",
+    "db:gen:client": "pnpm prisma generate"
   },
   "dependencies": {
+    "@prisma/adapter-d1": "^6.1.0",
+    "@prisma/client": "^6.1.0",
     "@radix-ui/react-avatar": "^1.1.2",
     "@radix-ui/react-dialog": "^1.1.4",
     "@radix-ui/react-popover": "^1.1.4",
@@ -22,17 +30,21 @@
     "dayjs": "^1.11.13",
     "destr": "^2.0.3",
     "isbot": "^4.1.0",
+    "neverthrow": "^8.1.1",
+    "prisma": "^6.1.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "remix-auth": "^3.7.0",
     "remix-auth-auth0": "^1.10.0",
     "restyle": "^3.0.0",
+    "ts-pattern": "^5.6.0",
     "zod": "^3.24.1"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^3.12.0",
     "@eslint-react/eslint-plugin": "^1.21.0",
     "@remix-run/dev": "^2.15.1",
+    "@tsconfig/strictest": "^2.0.5",
     "@types/react": "^19.0.2",
     "@types/react-dom": "^18.2.7",
     "eslint": "^9.17.0",
@@ -41,9 +53,11 @@
     "eslint-plugin-react-refresh": "^0.4.16",
     "rollup-plugin-typescript2": "^0.36.0",
     "ts-patch": "^3.3.0",
+    "tsx": "^4.19.2",
     "typescript": "^5.7.2",
     "vite": "^5.1.0",
     "vite-tsconfig-paths": "^4.2.1",
+    "vitest": "^3.0.4",
     "wrangler": "^3.99.0"
   },
   "engines": {

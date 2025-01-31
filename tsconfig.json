@@ -1,4 +1,5 @@
 {
+  "extends": "@tsconfig/strictest/tsconfig.json",
   "include": [
     "**/*.ts",
     "**/*.tsx",
@@ -15,7 +16,8 @@
     ],
     "types": [
       "@remix-run/cloudflare",
-      "vite/client"
+      "vite/client",
+      "vitest/globals"
     ],
     "isolatedModules": true,
     "esModuleInterop": true,

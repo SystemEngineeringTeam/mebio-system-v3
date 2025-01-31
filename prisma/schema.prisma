@@ -1,0 +1,185 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// see: https://sysken.esa.io/posts/2008
+
+model Member {
+  id           String @id @unique @default(uuid(7)) // -> `Brand<"memberId", string>`
+  subject      String @unique // -> `Brand<"subject", string>`
+  email        String @unique
+  securityRole String // -> `SecurityRole`
+
+  /// meta ///
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  /// relations ///
+
+  //// 1:1 ////
+  MemberBase           MemberBase?
+  MemberSensitive      MemberSensitive?
+  MemberActive         MemberActive?
+  MemberActiveInternal MemberActiveInternal?
+  MemberActiveExternal MemberActiveExternal?
+  MemberAlumni         MemberAlumni?
+  MemberStatus         MemberStatus?         @relation("memberStatus")
+
+  //// 1:N ////
+  MemberStatusAsUpdaterToHasDeleted      MemberStatus[] @relation("memberStatusAsUpdaterToHasDeleted")
+  MemberStatusAsUpdaterToLastRenewalDate MemberStatus[] @relation("memberStatusAsUpdaterToLastRenewalDate")
+  PaymentAsPayer                         Payment[]      @relation("paymentMemberAsPayer")
+  PaymentAsReceiver                      Payment[]      @relation("paymentMemberAsReceiver")
+  PaymentAsApprover                      Payment[]      @relation("paymentMemberAsApprover")
+}
+
+model MemberBase {
+  memberId      String @id @unique // -> `Brand<"memberId", string>`
+  iconUrl       String // -> `URL`
+  firstName     String
+  lastName      String
+  firstNameKana String
+  lastNameKana  String
+
+  /// meta ///
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  /// FK ///
+
+  Member Member @relation(fields: [memberId], references: [id])
+}
+
+model MemberStatus {
+  memberId        String   @id @unique // -> `Brand<"memberId", string>`
+  hasDeleted      Boolean  @default(false)
+  lastRenewalDate DateTime
+
+  /// meta ///
+
+  updatedHasDeletedAt        DateTime @updatedAt
+  updatedHasDeletedById      String // -> `Brand<"memberId", string>`
+  updatedLastRenewalDateById String // -> `Brand<"memberId", string>`
+
+  /// FK ///
+
+  Member                   Member @relation(name: "memberStatus", fields: [memberId], references: [id])
+  UpdatedHasDeletedBy      Member @relation(name: "memberStatusAsUpdaterToHasDeleted", fields: [updatedHasDeletedById], references: [id])
+  UpdatedLastRenewalDateBy Member @relation(name: "memberStatusAsUpdaterToLastRenewalDate", fields: [updatedLastRenewalDateById], references: [id])
+}
+
+model MemberSensitive {
+  memberId       String @id @unique // -> `Brand<"memberId", string>`
+  birthday       String
+  gender         String // -> `Gender`
+  phoneNumber    String
+  currentZipCode String
+  currentAddress String
+  parentsZipCode String
+  parentsAddress String
+
+  /// meta ///
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  /// FK ///
+
+  Member Member @relation(fields: [memberId], references: [id])
+}
+
+model MemberActive {
+  memberId String @id @unique // -> `Brand<"memberId", string>`
+  grade    String // -> `Grade`
+
+  /// meta ///
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  /// FK ///
+
+  Member Member @relation(fields: [memberId], references: [id])
+}
+
+model MemberActiveInternal {
+  memberId  String @id @unique // -> `Brand<"memberId", string>`
+  studentId String @unique // -> `Brand<"studentId", string>`
+  role      String // -> `Role`
+
+  /// meta ///
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  /// FK ///
+
+  Member Member @relation(fields: [memberId], references: [id])
+}
+
+model MemberActiveExternal {
+  memberId     String @id @unique // -> `Brand<"memberId", string>`
+  schoolName   String
+  schoolMajor  String
+  organization String
+
+  /// meta ///
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  /// FK ///
+
+  Member Member @relation(fields: [memberId], references: [id])
+}
+
+model MemberAlumni {
+  memberId      String @id @unique // -> `Brand<"memberId", string>`
+  graduatedYear Int
+  // NOTE: Should NOT be narrow type in client.
+  oldRole       String
+
+  /// meta ///
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  /// FK ///
+
+  Member Member @relation(fields: [memberId], references: [id])
+}
+
+model Payment {
+  id          String  @id @unique @default(uuid(7)) // -> `Brand<"paymentId", string>`
+  payerId     String // -> `Brand<"memberId", string>`
+  receiverId  String // -> `Brand<"memberId", string>`
+  hasApproved Boolean @default(false)
+  approverId  String? // -> `Nullable<Brand<"memberId", string>>`
+
+  /// meta ///
+
+  receivedAt DateTime
+  approvedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  /// FK ///
+
+  MemberAsPayer    Member  @relation(name: "paymentMemberAsPayer", fields: [payerId], references: [id])
+  MemberAsReceiver Member  @relation(name: "paymentMemberAsReceiver", fields: [receiverId], references: [id])
+  MemberAsApprover Member? @relation(name: "paymentMemberAsApprover", fields: [approverId], references: [id])
+}
+
+model Snapshot {
+  id          String  @id @unique @default(uuid(7)) // -> `Brand<"snapshotId", string>`
+  description String?
+  body        String // -> `JSON` (型どうしようかな)
+  createdAt   DateTime @default(now())
+}

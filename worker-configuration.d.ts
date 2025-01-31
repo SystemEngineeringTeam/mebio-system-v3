@@ -4,7 +4,8 @@ interface Env {
 	AUTH0_DOMAIN: string;
 	AUTH0_CLIENT_ID: string;
 	AUTH0_CLIENT_SECRET: string;
-	SESSION_SECRET: string;
-	CF_PAGES_URL: string;
 	AUTH0_CALLBACK_URL: string;
+	CF_PAGES_URL: string;
+	SESSION_SECRET: string;
+	DB: D1Database;
 }
